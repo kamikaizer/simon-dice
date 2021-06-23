@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Simon Dice</title>
+</head>
+<body>
+    <div class="gameboard">
+        <div id="celeste" class="color celeste left" data-color="celeste"></div>
+        <div id="violeta" class="color violeta right" data-color="violeta"></div>
+        <div id="naranja" class="color naranja left" data-color="naranja"></div>
+        <div id="verde" class="color verde right" data-color="verde"></div>
+        <button id="btnEmpezar" class="btn-start" onclick="empezarJuego()">Empezar a jugar!</button>
+      </div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+    <script>
+      const celeste = document.getElementById('celeste')
+      const violeta = document.getElementById('violeta')
+      const naranja = document.getElementById('naranja')
+      const verde = document.getElementById('verde')
+      const btnEmpezar = document.getElementById('btnEmpezar')
+      const ULTIMO_NIVEL = 10
+
+      class Juego {
+        constructor() {
+          this.inicializar = this.inicializar.bind(this)
+          this.inicializar()
+          this.generarSecuencia()
+          setTimeout(this.siguienteNivel, 500)
+        }
+        inicializar() {
+          this.siguienteNivel = this.siguienteNivel.bind(this)
+          this.elegirColor = this.elegirColor.bind(this)
+          this.toggleBtnEmpezar()
+          this.nivel = 1
+          this.colores = {
+            celeste,
+            naranja,
+            violeta,
+            verde
+          }
+        }
+
+        // esto hace que cada ves que se reinicie el juego, aparezca el boton de iniciar
+        toggleBtnEmpezar(){
+          if (btnEmpezar.classList.contains('hide')){
+            btnEmpezar.classList.remove('hide')
+          } else {
+            btnEmpezar.classList.add('hide')
+          }
+        }
+
+
+// celeste: celeste se puede omitir escribir 2 veces la variable y el atributo ya que tienen el mismo nombre
+
+        generarSecuencia() {
+          this.secuencia = new Array(ULTIMO_NIVEL).fill(0).map(n => Math.floor(Math.random() * 4))
+        }
+        siguienteNivel(){
+          this.subnivel = 0
+          this.nombreAtributo = 'valor'
+          this.iluminarSecuencia()
+          this.agregarElementosClick()
+          }
+
+        transformarnumeroacolor(numero){
+          switch (numero) {
+            case 0:
+              return 'celeste'
+            case 1:
+              return 'naranja'
+            case 2:
+              return 'violeta'
+            case 3:
+              return 'verde'
+          }
+        }
+        trasnformarColorANumero(color){
+          switch (color) {
+            case 'celeste':
+              return 0
+            case 'naranja':
+              return 1
+            case 'violeta':
+              return 2
+            case 'verde':
+              return 3
+          }
+        }
+
+        // iluminarSecuencia() {
+        //   for(var i = 0; i < this.nivel; i++) {
+        //     var color = this.transformarnumeroacolor(this.secuencia[i])
+        //     setTimeout(() => this.iluminarcolor(color), 1000 * i)
+        //   }
+        // }
+        // al ponerle var, al cambiar el numero de nivel linea 10, lo que hara el
+        // programa es marcar x cantidad de veces el mismo color por lo que hay que usar left
+        // porque var cada ciclo for va pisando la variable color
+
+        iluminarSecuencia() {
+          for (let i = 0; i < this.nivel; i++) {
+            const color = this.transformarnumeroacolor(this.secuencia[i])
+            setTimeout(() => this.iluminarcolor(color), 1000 * i)
+          }
+        }
+
+        // al cambiarlo por let solo se aplicaran cambios en el bloque de 150
+        // a 155 sin interferir en el resto del codigo
+
+          iluminarcolor(color) {
+            this.colores[color].classList.add('light')
+            setTimeout(() => this.apagarColor(color), 350)
+          }
+          apagarColor(color) {
+            this.colores[color].classList.remove('light')
+          }
+          agregarElementosClick(){
+            this.colores.celeste.addEventListener('click', this.elegirColor)
+            this.colores.naranja.addEventListener('click', this.elegirColor)
+            this.colores.violeta.addEventListener('click', this.elegirColor)
+            this.colores.verde.addEventListener('click', this.elegirColor)
+          }
+
+          eliminarEventosClick(){
+            this.colores.celeste.removeEventListener('click', this.elegirColor)
+            this.colores.naranja.removeEventListener('click', this.elegirColor)
+            this.colores.violeta.removeEventListener('click', this.elegirColor)
+            this.colores.verde.removeEventListener('click', this.elegirColor)
+          }
+
+          elegirColor(ev){
+            const nombreColor = ev.target.dataset.color
+            const numeroColor = this.trasnformarColorANumero(nombreColor)
+            this.iluminarcolor(nombreColor)
+            if(numeroColor === this.secuencia[this.subnivel]){
+              this.subnivel++
+              if(this.subnivel === this.nivel){
+                this.nivel++
+                this.eliminarEventosClick()
+                if(this.nivel === (ULTIMO_NIVEL + 1)){
+                  this.ganoElJuego()
+                } else {
+                  setTimeout(this.siguienteNivel, 1000)
+                }
+              }
+            } else {
+              this.perdioElJuego()
+            }
+            // console.log(this)
+            // al poner this en consola se imprime el boton lineas 89 a 92
+            // al poner ev muestra los parametros del boton
+            // bind ata el this a los parametros del boton
+          }
+          ganoElJuego(){
+            swal('Hola', 'Felicidades, ganaste el juego', 'success')
+            .then(this.inicializar)
+            }
+          perdioElJuego(){
+            swal('Hola', 'Perdiste, sigue intentando', 'error')
+            .then(() => {
+              this.eliminarEventosClick()
+              this.inicializar()
+            })
+          }
+        }
+
+      function empezarJuego(){
+        window.juego = new Juego()
+      }
+    </script>
+  </body>
+</html>
